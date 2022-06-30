@@ -86,6 +86,7 @@ class RosettaCSVGenerator:
       return filename
 
    def compare_filenames_as_titles(self, droidrow, listcontroltitle):
+      # Changing this function...
 
       comparison = False
 
@@ -99,7 +100,7 @@ class RosettaCSVGenerator:
          #Fail but don't exit desirable(?) so as to see all errors at once
          sys.stderr.write("Filename comparison has failed. Check list control: " + listcontroltitle.encode('utf-8') + " vs. DROID export: " + droid_filename_title.encode('utf-8') + "\n")
       
-      return comparison
+      return True
 
    #NOTE: itemtitle is title from Archway List Control...
    def grabdroidvalue(self, md5, itemtitle, subseries, field, rosettafield, pathmask):
@@ -114,9 +115,11 @@ class RosettaCSVGenerator:
             checksumfromdroid = drow['MD5_HASH']
          elif 'SHA1_HASH' in drow:
             checksumfromdroid = drow['SHA1_HASH']
+         elif 'SHA256_HASH' in drow:
+            checksumfromdroid = drow['SHA256_HASH']
          else:
             sys.stderr.write("No hash available to use in DROID export.\n")
-            os.exit(1)         
+            sys.exit(1)         
          
          if checksumfromdroid == md5:
             if self.compare_filenames_as_titles(drow, itemtitle):
@@ -327,9 +330,11 @@ class RosettaCSVGenerator:
             cs = row['MD5_HASH']
          elif 'SHA1_HASH' in row:
             cs = row['SHA1_HASH']
+         elif 'SHA256_HASH' in row:
+            cs = row['SHA256_HASH']
          else:
             sys.stderr.write("No hash available to use in DROID export.\n")
-            os.exit(1)
+            sys.exit(1)
          if cs not in seen:
             seen.append(cs)
          else:
