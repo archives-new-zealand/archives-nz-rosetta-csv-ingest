@@ -1,5 +1,6 @@
 """Provenance CSV handler."""
 
+import logging
 from os.path import exists
 
 try:
@@ -10,6 +11,8 @@ except ModuleNotFoundError:
     except ModuleNotFoundError:
         from anz_rosetta_csv.droidcsvhandlerclass import *
 
+logger = logging.getLogger(__name__)
+
 
 class provenanceCSVHandler:
     # TODO: Better error handlin? Format error handling? Validation?
@@ -17,6 +20,11 @@ class provenanceCSVHandler:
 
     def readProvenanceCSV(self, provcsvname):
         exportlist = None
+        if not exists(provcsvname):
+            logger.error(
+                "it looks like you want to include provenance but the file doesn't exist: '%s'",
+                provcsvname,
+            )
         if exists(provcsvname):
             csvhandler = genericCSVHandler()
             exportlist = csvhandler.csvaslist(provcsvname)

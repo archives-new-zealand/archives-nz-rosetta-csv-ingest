@@ -1,6 +1,8 @@
 """Archives New Zealand Rosetta CSV Generator."""
 
+
 import configparser as ConfigParser
+import logging
 import os
 import sys
 
@@ -24,6 +26,8 @@ except ModuleNotFoundError:
         from anz_rosetta_csv.ProvenanceCSVHandlerClass import *
         from anz_rosetta_csv.rosettacsvsectionsclass import RosettaCSVSections
 
+logger = logging.getLogger(__name__)
+
 
 class RosettaCSVGenerator:
     def __init__(
@@ -34,39 +38,41 @@ class RosettaCSVGenerator:
         configfile=False,
         provenance=False,
     ):
-        if configfile is not False:
-            self.config = ConfigParser.RawConfigParser()
-            self.config.read(configfile)
+        if not configfile:
+            logger.error("a configuration file hasn't been provided")
+            sys.exit(1)
 
-            self.droidcsv = droidcsv
-            self.exportsheet = exportsheet
+        logging.info("reading app config from '%s'", configfile)
+        self.config = ConfigParser.RawConfigParser()
+        self.config.read(configfile)
 
-            # NOTE: A bit of a hack, compare with import schema work and refactor
-            self.rosettaschema = rosettaschema
-            self.readRosettaSchema()
+        self.droidcsv = droidcsv
+        self.exportsheet = exportsheet
 
-            # Grab Rosetta Sections
-            rs = RosettaCSVSections(configfile)
-            self.rosettasections = rs.sections
+        # NOTE: A bit of a hack, compare with import schema work and refactor
+        self.rosettaschema = rosettaschema
+        self.readRosettaSchema()
 
-            # set provenance flag and file
-            self.prov = False
-            if provenance is True:
-                self.prov = True
-                self.provfile = "prov.notes"
-                if self.config.has_option("provenance", "file"):
-                    # Overwrite default, if manually specified...
-                    self.provfile = self.config.get("provenance", "file")
+        # Grab Rosetta Sections
+        rs = RosettaCSVSections(configfile)
+        self.rosettasections = rs.sections
 
-                self.provhash = "MD5"
-                if self.config.has_option("application configuration", "provhash"):
-                    self.provhash = self.config.get(
-                        "application configuration", "provhash"
-                    )
+        # set provenance flag and file
+        self.prov = False
+        if provenance:
+            self.prov = True
+            self.provfile = provenance
+            logger.info("provenance being read from : `%s`", self.provfile)
+            if self.config.has_option("provenance", "file"):
+                # Legacy mechanism to override the detaul provenance
+                # file. This can be removed in future.
+                self.provfile = self.config.get("provenance", "file")
 
-            self.pathmask = self.__setpathmask__()
-        else:
-            sys.exit("No config file")
+            self.provhash = "MD5"
+            if self.config.has_option("application configuration", "provhash"):
+                self.provhash = self.config.get("application configuration", "provhash")
+
+        self.pathmask = self.__setpathmask__()
 
         # Get some functions from ImportGenerator
         self.impgen = ImportSheetGenerator()
@@ -108,7 +114,6 @@ class RosettaCSVGenerator:
 
     def compare_filenames_as_titles(self, droidrow, listcontroltitle):
         # Changing this function...
-
 
         # DROID NAME column used to generate title in Import Sheet
         droid_filename_title = self.impgen.get_title(droidrow["NAME"])
@@ -345,7 +350,6 @@ class RosettaCSVGenerator:
         fields = []
 
         for item in self.exportlist:
-
             itemrow = []
 
             # self.rosettasections, list of dictionaries generated from CFG file...

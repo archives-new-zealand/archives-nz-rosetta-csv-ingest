@@ -1,12 +1,16 @@
 """Rosetta CSV sections handler."""
 
 import configparser as ConfigParser
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RosettaCSVSections:
     sections = []
 
     def __init__(self, configfile):
+        logging.info("reading app config from '%s'", configfile)
         self.config = ConfigParser.RawConfigParser()
         self.config.read(configfile)
 

@@ -1,9 +1,10 @@
-#!/usr/local/bin/python
-# -*- coding: utf-8 -*-
+"""Archives New Zealand Rosetta CSV Generator."""
 
 import argparse
 import configparser as ConfigParser
+import logging
 import sys
+import time
 
 try:
     from RosettaCSVGenerator import RosettaCSVGenerator
@@ -12,6 +13,18 @@ except ModuleNotFoundError:
         from src.anz_rosetta_csv.RosettaCSVGenerator import RosettaCSVGenerator
     except ModuleNotFoundError:
         from anz_rosetta_csv.RosettaCSVGenerator import RosettaCSVGenerator
+
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    format="%(asctime)-15s %(levelname)s :: %(filename)s:%(lineno)s:%(funcName)s() :: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level="INFO",
+)
+
+# Default to UTC time.
+logging.Formatter.converter = time.gmtime
 
 
 def createImportOverview(droidcsv, configfile):
@@ -64,7 +77,6 @@ def main():
         help="Flag to enable use of prov.notes file.",
         default=False,
         required=False,
-        action="store_true",
     )
     parser.add_argument(
         "--args",
@@ -82,26 +94,18 @@ def main():
     global args
     args = parser.parse_args()
 
-    # TODO: Additional help text to describe two discrete sets of options
     if args.args:
         config = ConfigParser.RawConfigParser()
         config.read(args.args)
-
         if config.has_option("arguments", "title"):
-            sys.stderr.write(
-                "INFO: Using "
-                + config.get("arguments", "title")
-                + " configuration file."
-                + "\n"
-            )
-        else:
-            sys.stderr.write("Using an arguments configuration file." + "\n\n")
-
+            logger.info("using the '%s' args file", config.get("arguments", "title"))
+        logging.info("reading args from: '%s'", args.args)
         if config.has_option("arguments", "droidexport"):
             args.csv = config.get("arguments", "droidexport")
             args.ros = config.get("arguments", "schemafile")
             args.cfg = config.get("arguments", "configfile")
             args.exp = config.get("arguments", "listcontrol")
+            args.pro = config.get("arguments", "provenance")
 
     # creating an ingest sheet for Rosetta...
     if args.csv and args.exp and args.ros and args.cfg:
