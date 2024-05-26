@@ -27,10 +27,10 @@ repos:
   hooks:
   - id: markdownlint
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.2.4
+  rev: v2.3.0
   hooks:
     - id: codespell
-      args: [-I, .codespellignore]
+      args: ["-I", ".codespellignore"]
 - repo: local
   hooks:
     - id: pylint

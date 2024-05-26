@@ -4,21 +4,23 @@ import logging
 from os.path import exists
 
 try:
-    from droidcsvhandlerclass import *
+    from droid_csv_handler_class import GenericCSVHandler
 except ModuleNotFoundError:
     try:
-        from src.anz_rosetta_csv.droidcsvhandlerclass import *
+        from src.anz_rosetta_csv.droid_csv_handler_class import GenericCSVHandler
     except ModuleNotFoundError:
-        from anz_rosetta_csv.droidcsvhandlerclass import *
+        from anz_rosetta_csv.droid_csv_handler_class import GenericCSVHandler
 
 logger = logging.getLogger(__name__)
 
 
-class provenanceCSVHandler:
-    # TODO: Better error handlin? Format error handling? Validation?
+class ProvenanceCSVHandler:
+    """Provenance CSV handler class."""
+
     provheaders = ["RECORDNUMBER", "NOTEDATE", "NOTETEXT"]
 
-    def readProvenanceCSV(self, provcsvname):
+    def read_provenance_csv(self, provcsvname):
+        """Read provenance CSV and return it to the caller."""
         exportlist = None
         if not exists(provcsvname):
             logger.error(
@@ -26,8 +28,8 @@ class provenanceCSVHandler:
                 provcsvname,
             )
         if exists(provcsvname):
-            csvhandler = genericCSVHandler()
-            exportlist = csvhandler.csvaslist(provcsvname)
+            csvhandler = GenericCSVHandler()
+            exportlist = csvhandler.csv_as_list(provcsvname)
             # counter a blank sheet
             if len(exportlist) < 1:
                 exportlist = None

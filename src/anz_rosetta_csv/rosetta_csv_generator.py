@@ -1,46 +1,92 @@
 """Archives New Zealand Rosetta CSV Generator."""
 
+# pylint: disable=R1710,R0902,R0913,R0912
 
 import configparser as ConfigParser
 import logging
-import os
 import sys
 
 try:
-    import JsonTableSchema
-    from droidcsvhandlerclass import *
-    from ImportSheetGenerator import ImportSheetGenerator
-    from ProvenanceCSVHandlerClass import *
-    from rosettacsvsectionsclass import RosettaCSVSections
+    import json_table_schema
+    from droid_csv_handler_class import DroidCSVHandler, GenericCSVHandler
+    from import_sheet_generator import ImportSheetGenerator
+    from provenance_csv_handler_class import ProvenanceCSVHandler
+    from rosetta_csv_sections_class import RosettaCSVSections
 except ModuleNotFoundError:
     try:
-        from src.anz_rosetta_csv.droidcsvhandlerclass import *
-        from src.anz_rosetta_csv.ImportSheetGenerator import ImportSheetGenerator
-        from src.anz_rosetta_csv.JsonTableSchema import JsonTableSchema
-        from src.anz_rosetta_csv.ProvenanceCSVHandlerClass import *
-        from src.anz_rosetta_csv.rosettacsvsectionsclass import RosettaCSVSections
+        from src.anz_rosetta_csv.droid_csv_handler_class import (
+            DroidCSVHandler,
+            GenericCSVHandler,
+        )
+        from src.anz_rosetta_csv.import_sheet_generator import ImportSheetGenerator
+        from src.anz_rosetta_csv.json_table_schema import json_table_schema
+        from src.anz_rosetta_csv.provenance_csv_handler_class import (
+            ProvenanceCSVHandler,
+        )
+        from src.anz_rosetta_csv.rosetta_csv_sections_class import RosettaCSVSections
     except ModuleNotFoundError:
-        from anz_rosetta_csv.droidcsvhandlerclass import *
-        from anz_rosetta_csv.ImportSheetGenerator import ImportSheetGenerator
-        from anz_rosetta_csv.JsonTableSchema import JsonTableSchema
-        from anz_rosetta_csv.ProvenanceCSVHandlerClass import *
-        from anz_rosetta_csv.rosettacsvsectionsclass import RosettaCSVSections
+        from anz_rosetta_csv.droid_csv_handler_class import (
+            DroidCSVHandler,
+            GenericCSVHandler,
+        )
+        from anz_rosetta_csv.import_sheet_generator import ImportSheetGenerator
+        from anz_rosetta_csv.json_table_schema import json_table_schema
+        from anz_rosetta_csv.provenance_csv_handler_class import ProvenanceCSVHandler
+        from anz_rosetta_csv.rosetta_csv_sections_class import RosettaCSVSections
 
 logger = logging.getLogger(__name__)
 
 
+def ingest_path_from_droid_row(droid_row: dict, path_mask: str) -> bool:
+    """Return an ingest path from a droid row with pathmask removed."""
+    file_name = droid_row["NAME"].strip()
+    file_path = droid_row["FILE_PATH"].strip()
+    ingest_path = file_path.replace(file_name, "").replace(path_mask, "", 1)
+    ingest_path = ingest_path.replace("\\", "/")
+    return ingest_path.strip()
+
+
+def find_path_from_subseries(
+    record_title: str, droid_row: dict, lc_sub_series: str, series_mask: str
+) -> bool:
+    """Determine the path to add to the CSV from its sub-series"""
+    file_name = droid_row["NAME"].strip()
+    file_path = droid_row["FILE_PATH"].strip()
+    if record_title.strip() not in file_path:
+        return False
+    compare = file_path.replace(file_name, "").replace(series_mask, "", 1).strip()[:-1]
+    return compare == lc_sub_series
+
+
 class RosettaCSVGenerator:
+    """Rosetta CSV Generator Object."""
+
+    config = None
+    droidcsv = None
+    exportsheet = None
+    rosettaschema = None
+    rosettasections = None
+    prov = None
+    rosettacsvdict = None
+
     def __init__(
         self,
-        droidcsv=False,
-        exportsheet=False,
-        rosettaschema=False,
-        configfile=False,
-        provenance=False,
+        droidcsv=None,
+        exportsheet=None,
+        rosettaschema=None,
+        configfile=None,
+        provenance=None,
     ):
         if not configfile:
             logger.error("a configuration file hasn't been provided")
             sys.exit(1)
+
+        self.subseriesmask = None
+        self.rnumber = None
+        self.droidlist = None
+        self.exportlist = None
+        self.provlist = None
+        self.duplicates = None
 
         logging.info("reading app config from '%s'", configfile)
         self.config = ConfigParser.RawConfigParser()
@@ -51,7 +97,7 @@ class RosettaCSVGenerator:
 
         # NOTE: A bit of a hack, compare with import schema work and refactor
         self.rosettaschema = rosettaschema
-        self.readRosettaSchema()
+        self.read_rosetta_schema()
 
         # Grab Rosetta Sections
         rs = RosettaCSVSections(configfile)
@@ -86,58 +132,46 @@ class RosettaCSVGenerator:
         field = f'"{value}"'
         return field
 
-    def readRosettaSchema(self):
-        f = open(self.rosettaschema, "rb")
-        importschemajson = f.read()
-        importschema = JsonTableSchema.JSONTableSchema(importschemajson)
+    def read_rosetta_schema(self):
+        """Read the Rosetta Schema File."""
+        importschemajson = None
+        with open(self.rosettaschema, "r", encoding="utf-8") as rosetta_schema:
+            importschemajson = rosetta_schema.read()
+        importschema = json_table_schema.JSONTableSchema(importschemajson)
 
         importschemadict = importschema.as_dict()
         importschemaheader = importschema.as_csv_header()
 
-        self.rosettacsvheader = (
-            importschemaheader + "\n"
-        )  # TODO: Add newline in JSON Handler class?
+        self.rosettacsvheader = importschemaheader + "\n"
         self.rosettacsvdict = importschemadict["fields"]
-        f.close()
 
-    def createcolumns(self, columno):
+    def createcolumns(self, column_number):
+        """Create a number of empty columns in Rosetta CSV."""
         columns = ""
-        for column in range(columno):
-            columns = columns + '"",'
+        for _ in range(column_number):
+            columns = f'{columns}"",'
         return columns
 
     def normalize_spaces(self, filename):
-        if filename.find("  ") is not -1:
+        """Normalize spacces in a filename."""
+        if filename.find("  ") != -1:
             filename = filename.replace("  ", " ")
             return self.normalize_spaces(filename)
         return filename
 
     def compare_filenames_as_titles(self, droidrow, listcontroltitle):
-        # Changing this function...
-
-        # DROID NAME column used to generate title in Import Sheet
+        """Test filename titles to confirm equivalence."""
         droid_filename_title = self.impgen.get_title(droidrow["NAME"])
+        normalized_droid_filename = self.normalize_spaces(droid_filename_title)
+        normalized_lc_title = self.normalize_spaces(listcontroltitle)
+        if normalized_droid_filename == normalized_lc_title:
+            return True
+        return False
 
-        # normalize spaces and compare (for when list control adopts original title)
-        if self.normalize_spaces(droid_filename_title) == self.normalize_spaces(
-            listcontroltitle
-        ):
-            pass
-        else:
-            # Fail but don't exit desirable(?) so as to see all errors at once
-            sys.stderr.write(
-                "Filename comparison has failed. Check list control: "
-                + listcontroltitle.encode("utf-8")
-                + " vs. DROID export: "
-                + droid_filename_title.encode("utf-8")
-                + "\n"
-            )
-
-        return True
-
-    # NOTE: itemtitle is title from Archway List Control...
-    def grabdroidvalue(self, md5, itemtitle, subseries, field, rosettafield, pathmask):
-        # TODO: Potentially index droidlist by MD5 or SHA-256 in future...
+    def get_droid_value(
+        self, checksum, lc_title, lc_sub_series, rosetta_field, droid_field, path_mask
+    ):
+        """Retrieve a row from a DROID sheet."""
         returnfield = ""
         for drow in self.droidlist:
             addtorow = False
@@ -149,46 +183,36 @@ class RosettaCSVGenerator:
                 checksumfromdroid = drow["SHA1_HASH"]
             elif "SHA256_HASH" in drow:
                 checksumfromdroid = drow["SHA256_HASH"]
+            elif "SHA512_HASH" in drow:
+                checksumfromdroid = drow["SHA512_HASH"]
             else:
-                sys.stderr.write("No hash available to use in DROID export.\n")
+                logger.error("no hash available to use in DROID export.")
                 sys.exit(1)
 
-            if checksumfromdroid == md5:
-                if self.compare_filenames_as_titles(drow, itemtitle):
-                    # Performance, only do more work, if we have to care about it...
-                    if checksumfromdroid in self.duplicates:
-                        # recreate subseries so that we can do comparison for path alignment...
-                        subseriesfromdroid = os.path.dirname(drow["FILE_PATH"]).replace(
-                            self.subseriesmask, ""
-                        )
+            if checksumfromdroid == checksum:
+                if not self.compare_filenames_as_titles(drow, lc_title):
+                    continue
 
-                        if subseries == subseriesfromdroid:
-                            addtorow = True
-                            self.duplicateitemsaddedset.add(
-                                subseries
-                                + "\\"
-                                + itemtitle
-                                + " checksum: "
-                                + checksumfromdroid
-                            )
-                    else:
-                        addtorow = True
+                # Performance, only do more work, if we have to care about it...
+                if checksumfromdroid not in self.duplicates:
+                    addtorow = True
+                else:
+                    addtorow = find_path_from_subseries(
+                        record_title=lc_title,
+                        droid_row=drow,
+                        lc_sub_series=lc_sub_series,
+                        series_mask=self.subseriesmask,
+                    )
+                    item_to_monitor = (
+                        f"{lc_sub_series}\\{lc_title} checksum: {checksumfromdroid}"
+                    )
+                    self.duplicateitemsaddedset.add(item_to_monitor)
 
             if addtorow is True:
-                droidfield = drow[rosettafield]
-                if field == "File Location":
-                    returnfield = (
-                        os.path.dirname(droidfield)
-                        .replace(pathmask, "")
-                        .replace("\\", "/")
-                        + "/"
-                    )
-                elif field == "File Original Path":
-                    returnfield = (
-                        os.path.dirname(droidfield)
-                        .replace(pathmask, "")
-                        .replace("\\", "/")
-                        + "/"
+                droidfield = drow[droid_field]
+                if rosetta_field == "File Original Path":
+                    returnfield = ingest_path_from_droid_row(
+                        droid_row=drow, path_mask=path_mask
                     )
                 else:
                     returnfield = droidfield
@@ -196,66 +220,53 @@ class RosettaCSVGenerator:
         return returnfield
 
     def csvstringoutput(self, csvlist):
-        # String output...
+        """Output CSV as a string."""
+
         csvrows = self.rosettacsvheader
-
-        # TODO: Understand how to get this in rosettacsvsectionclass
-        # NOTE: Possibly put all basic RosettaCSV stuff in rosettacsvsectionclass?
-        # Static ROW in CSV Ingest Sheet
-        SIPROW = ['"",'] * len(self.rosettacsvdict)
-        SIPROW[0] = '"SIP",'
-
-        # SIP Title...
+        sip_row = ['"",'] * len(self.rosettacsvdict)
+        sip_row[0] = '"SIP",'
+        sip_title = '"CSV Load",'
         if self.config.has_option("rosetta mapping", "SIP Title"):
-            SIPROW[1] = '"' + self.config.get("rosetta mapping", "SIP Title") + '",'
-        else:
-            SIPROW[1] = '"CSV Load",'
-
-        csvrows = csvrows + "".join(SIPROW).rstrip(",") + "\n"
-
-        # write utf-8 BOM
-        # NOTE: Don't write UTF-8 BOM... Rosetta doesn't like this.
-        # sys.stdout.write(u'\uFEFF'.encode('utf-8'))
-
+            sip_title = f'"{self.config.get("rosetta mapping", "SIP Title")}",'
+        sip_row[1] = sip_title
+        sip_row = "".join(sip_row).rstrip(",")
+        csvrows = f"{csvrows}{sip_row}\n"
         for sectionrows in csvlist:
             rowdata = ""
             for sectionrow in sectionrows:
                 for fielddata in sectionrow:
-                    rowdata = rowdata + fielddata + ","
-                rowdata = rowdata.rstrip(",") + "\n"
+                    rowdata = f"{rowdata}{fielddata},"
+                rowdata = f'{rowdata.rstrip(",")}\n'
             csvrows = csvrows + rowdata
 
-        # this is the best i can think of because ExLibris have named two fields with the same
-        # title in CSV which doesn't help us when we're trying to use unique names for populating rows
-        # replaces SIP Title with Title (DC)
+        # this is the best i can think of because ExLibris have named two fields
+        # with the same title in CSV which doesn't help us when we're trying to
+        # use unique names for populating rows replaces SIP Title with Title (DC)
         csvrows = csvrows.replace(
             '"Object Type","SIP Title"', '"Object Type","Title (DC)"'
         )
 
-        sys.stdout.write(csvrows)
-
         for dupe in self.duplicateitemsaddedset:
-            sys.stderr.write("Duplicates to monitor: " + dupe + "\n")
+            logger.info("duplicates to monitor: %s", dupe)
+
+        return csvrows
 
     def handleprovenanceexceptions(
-        self, PROVENANCE_FIELD, sectionrow, field, csvindex, rnumber
+        self, provenance_field, sectionrow, field, csvindex, rnumber
     ):
+        """Read a provenance CSV file for exceptions on specific rows."""
         ignorefield = False
-        if self.prov is True:
-            for p in self.provlist:
-                if p["RECORDNUMBER"] == rnumber:
-                    # These values overwrite the defaults from DROID list...
-                    # Double-check comparison to ensure we're inputting the right values...
-                    # TODO: field == 'MD5' get from config...
-                    if (PROVENANCE_FIELD == "CHECKSUM" and field == self.provhash) or (
-                        PROVENANCE_FIELD == "ORIGINALNAME"
-                        and field == "File Original Name"
-                    ):
-                        if p[PROVENANCE_FIELD].lower().strip() != "ignore":
-                            ignorefield = True
-                            sectionrow[csvindex] = self.add_csv_value(
-                                p[PROVENANCE_FIELD]
-                            )
+        if not self.prov:
+            return False
+        for p_row in self.provlist:
+            if p_row["RECORDNUMBER"] != rnumber:
+                continue
+            if (provenance_field == "CHECKSUM" and field == self.provhash) or (
+                provenance_field == "ORIGINALNAME" and field == "File Original Name"
+            ):
+                if p_row[provenance_field].lower().strip() != "ignore":
+                    ignorefield = True
+                    sectionrow[csvindex] = self.add_csv_value(p_row[provenance_field])
         return ignorefield
 
     def __setpathmask__(self):
@@ -265,6 +276,8 @@ class RosettaCSVGenerator:
         return pathmask
 
     def populaterows(self, field, listcontrolitem, sectionrow, csvindex, rnumber):
+        """Populate the rows in the Rosetta CSV."""
+
         # populate cell with static values from config file
         if self.config.has_option("static values", field):
             rosettafield = self.config.get("static values", field)
@@ -295,20 +308,20 @@ class RosettaCSVGenerator:
             )
 
             # if ignorefield is still false, check our checksum field as well...
-            if ignorefield is False:
+            if not ignorefield:
                 ignorefield = self.handleprovenanceexceptions(
                     "CHECKSUM", sectionrow, field, csvindex, rnumber
                 )
 
-            if ignorefield is False:
+            if not ignorefield:
                 sectionrow[csvindex] = self.add_csv_value(
-                    self.grabdroidvalue(
-                        listcontrolitem["Missing Comment"],
-                        listcontrolitem["Title"],
-                        listcontrolitem["Sub-Series"],
-                        field,
-                        rosettafield,
-                        self.pathmask,
+                    self.get_droid_value(
+                        checksum=listcontrolitem["Missing Comment"],
+                        lc_title=listcontrolitem["Title"],
+                        lc_sub_series=listcontrolitem["Sub-Series"],
+                        rosetta_field=field,
+                        droid_field=rosettafield,
+                        path_mask=self.pathmask,
                     )
                 )
 
@@ -330,21 +343,22 @@ class RosettaCSVGenerator:
                     if field == "Event Outcome Detail1":
                         sectionrow[csvindex] = self.add_csv_value(p["NOTETEXT"])
 
-    def createrosettacsv(self):
+    def create_rosetta_csv(self):
+        """Primary loop to create the Rosetta CSV from the given list
+        control.
+        """
         self.subseriesmask = ""
         if self.duplicates:
+            logger.info(
+                "duplicate checksums in list control, ensure '[path values] subseriesmask=' is set in config"
+            )
             if self.config.has_option("path values", "subseriesmask"):
                 self.subseriesmask = self.config.get("path values", "subseriesmask")
             else:
-                sys.stderr.write(
-                    "We have duplicate checksums, ensure they don't align with duplicate filenames"
-                )
-                sys.stderr.write(
-                    "Warning: '[path values] subseriesmask' not set in configuration."
-                )
+                logger.info("subseries mask is not set in config")
 
-        CSVINDEXSTARTPOS = 2
-        csvindex = CSVINDEXSTARTPOS
+        csv_index_start = 2
+        csvindex = csv_index_start
 
         self.rnumber = 0
         fields = []
@@ -377,26 +391,24 @@ class RosettaCSVGenerator:
                             field, item, sectionrow, csvindex, self.rnumber
                         )
                     else:
-                        # we have a misalignment between cfg and json...
-                        # TODO: Output a more useful error message?
-                        sys.exit(
-                            "CSV configuration and schema file do not match. Look for missing fields in either. Failed on: "
-                            + str(field)
-                            + " "
-                            + str(self.rosettacsvdict[csvindex]["name"])
+                        logger.error(
+                            "field in config: '%s' is not aligned with JSON schema '%s'",
+                            field,
+                            self.rosettacsvdict[csvindex]["name"],
                         )
+                        sys.exit(1)
 
                     # increment csvindex along the x-axis...
                     csvindex += 1
 
                 itemrow.append(sectionrow)
             fields.append(itemrow)
-            csvindex = CSVINDEXSTARTPOS
+            csvindex = csv_index_start
 
-        self.csvstringoutput(fields)
+        return self.csvstringoutput(fields)
 
-    # TODO: unit tests for this...
     def listduplicates(self):
+        """List duplicates discovered running this script."""
         seen = []
         dupe = []
         for row in self.droidlist:
@@ -407,8 +419,10 @@ class RosettaCSVGenerator:
                 cs = row["SHA1_HASH"]
             elif "SHA256_HASH" in row:
                 cs = row["SHA256_HASH"]
+            elif "SHA512_HASH" in row:
+                cs = row["SHA512_HASH"]
             else:
-                sys.stderr.write("No hash available to use in DROID export.\n")
+                logging.error("no hash available to use in DROID export")
                 sys.exit(1)
             if cs not in seen:
                 seen.append(cs)
@@ -416,30 +430,30 @@ class RosettaCSVGenerator:
                 dupe.append(cs)
         return set(dupe)
 
-    def readExportCSV(self):
+    def read_export_csv(self):
+        """Read a list control CSV."""
         if self.exportsheet is not False:
-            csvhandler = genericCSVHandler()
-            exportlist = csvhandler.csvaslist(self.exportsheet)
+            csvhandler = GenericCSVHandler()
+            exportlist = csvhandler.csv_as_list(self.exportsheet)
             return exportlist
 
-    def readDROIDCSV(self):
+    def read_droid_csv(self):
+        """Read a DROID CSV."""
         if self.droidcsv is not False:
-            droidcsvhandler = droidCSVHandler()
-            droidlist = droidcsvhandler.readDROIDCSV(self.droidcsv)
-            droidlist = droidcsvhandler.removefolders(droidlist)
-            return droidcsvhandler.removecontainercontents(droidlist)
+            droidcsvhandler = DroidCSVHandler()
+            droidlist = droidcsvhandler.read_droid_csv(self.droidcsv)
+            droidlist = droidcsvhandler.remove_folders(droidlist)
+            return droidcsvhandler.remove_container_contents(droidlist)
 
-    def export2rosettacsv(self):
+    def export_to_rosetta_csv(self):
+        """Convert a list control and droid sheet to a Rosetta CSV."""
         if self.droidcsv is not False and self.exportsheet is not False:
-            self.droidlist = self.readDROIDCSV()
-            self.exportlist = self.readExportCSV()
-            # self.readRosettaSchema()  #NOTE: Moved to constructor... TODO: Refactor
-
+            self.droidlist = self.read_droid_csv()
+            self.exportlist = self.read_export_csv()
             if self.prov is True:
-                provhandler = provenanceCSVHandler()
-                self.provlist = provhandler.readProvenanceCSV(self.provfile)
+                provhandler = ProvenanceCSVHandler()
+                self.provlist = provhandler.read_provenance_csv(self.provfile)
                 if self.provlist is None:
                     self.prov = False
-
             self.duplicates = self.listduplicates()
-            self.createrosettacsv()
+            return self.create_rosetta_csv()

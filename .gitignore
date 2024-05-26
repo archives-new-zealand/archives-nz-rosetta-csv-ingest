@@ -132,3 +132,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Test artefacts
+test-args.cfg
+sheets/

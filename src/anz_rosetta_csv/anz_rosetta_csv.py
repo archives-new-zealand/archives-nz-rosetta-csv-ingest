@@ -7,12 +7,12 @@ import sys
 import time
 
 try:
-    from RosettaCSVGenerator import RosettaCSVGenerator
+    from rosetta_csv_generator import RosettaCSVGenerator
 except ModuleNotFoundError:
     try:
-        from src.anz_rosetta_csv.RosettaCSVGenerator import RosettaCSVGenerator
+        from src.anz_rosetta_csv.rosetta_csv_generator import RosettaCSVGenerator
     except ModuleNotFoundError:
-        from anz_rosetta_csv.RosettaCSVGenerator import RosettaCSVGenerator
+        from anz_rosetta_csv.rosetta_csv_generator import RosettaCSVGenerator
 
 
 logger = logging.getLogger(__name__)
@@ -27,35 +27,12 @@ logging.basicConfig(
 logging.Formatter.converter = time.gmtime
 
 
-def createImportOverview(droidcsv, configfile):
-    createoverview = ImportOverviewGenerator(droidcsv, configfile)
-    createoverview.createOverviewSheet()
-
-
-def importsheetDROIDmapping(droidcsv, importschema, configfile):
-    importgenerator = ImportSheetGenerator(droidcsv, importschema, configfile)
-    importgenerator.droid2archwayimport()
-
-
-def exportsheetRosettamapping(
-    droidcsv, exportsheet, rosettaschema, configfile, provenance
-):
-    csvgen = RosettaCSVGenerator(
-        droidcsv, exportsheet, rosettaschema, configfile, provenance
-    )
-    csvgen.export2rosettacsv()
-
-
 def main():
-    # 	Usage: 	--csv [droid report]
-    # 	Handle command line arguments for the script
+    """Primary entry point for this script."""
+
     parser = argparse.ArgumentParser(
         description="Generate Archway Import Sheet and Rosetta Ingest CSV from DROID CSV Reports."
     )
-
-    # TODO: Consider optional and mandatory elements... behaviour might change depending on output...
-    # other options droid csv and rosetta schema
-    # NOTE: class on its own might be used to create a blank import csv with just static options
     parser.add_argument(
         "--csv", help="Single DROID CSV to read.", default=False, required=False
     )
@@ -88,12 +65,9 @@ def main():
 
     if len(sys.argv) == 1:
         parser.print_help()
-        sys.exit(1)
+        sys.exit()
 
-    # 	Parse arguments into namespace object to reference later in the script
-    global args
     args = parser.parse_args()
-
     if args.args:
         config = ConfigParser.RawConfigParser()
         config.read(args.args)
@@ -107,13 +81,20 @@ def main():
             args.exp = config.get("arguments", "listcontrol")
             args.pro = config.get("arguments", "provenance")
 
-    # creating an ingest sheet for Rosetta...
     if args.csv and args.exp and args.ros and args.cfg:
-        exportsheetRosettamapping(args.csv, args.exp, args.ros, args.cfg, args.pro)
-    # we're not doing anything sensible...
-    else:
-        parser.print_help()
-        sys.exit(1)
+        csvgen = RosettaCSVGenerator(
+            droidcsv=args.csv,
+            exportsheet=args.exp,
+            rosettaschema=args.ros,
+            configfile=args.cfg,
+            provenance=args.pro,
+        )
+        res = csvgen.export_to_rosetta_csv()
+        print(res)
+        sys.exit()
+
+    parser.print_help()
+    sys.exit()
 
 
 if __name__ == "__main__":

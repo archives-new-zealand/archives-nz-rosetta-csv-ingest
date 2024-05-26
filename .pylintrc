@@ -23,6 +23,9 @@ ignore-patterns=
     ^(.+).html,
     ^(.+).htm,
     ^(.+).svg,
+    ^(.+).cfg,
+    ^(.+).prov,
+    ^(.+).notes,
     ^\.,
 
 ignore-paths=
@@ -33,3 +36,5 @@ ignore-paths=
 [MESSAGES CONTROL]
 
 disable =
+    C0301,      # line too long.
+    R0903,      # too few public methods.
