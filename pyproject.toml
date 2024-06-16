@@ -8,8 +8,8 @@
 #   * https://github.com/pypa/sampleproject/blob/fc8d83efd5749853507be959d858629d0aaf5c6e/pyproject.toml
 #
 
-name = "anz-rosetta-csv"
-version = "0.0.0"
+name = "archivesnz-rosetta-csv"
+dynamic = ["version"]
 requires-python = ">=3.9"
 
 dependencies = [
@@ -17,8 +17,10 @@ dependencies = [
 ]
 
 [project.scripts]
-template = "src.anz_collections_import.anz_collections_import:main"
+archivesnz_rosetta_csv_generator = "anz_rosetta_csv.anz_rosetta_csv:main"
 
 [build-system]
-requires = ["setuptools>=69.5.1", "wheel"]
+requires = ["setuptools>=70.0.0", "wheel", "setuptools_scm[toml]>=8.1.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
