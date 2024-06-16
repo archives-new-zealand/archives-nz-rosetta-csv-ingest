@@ -1,12 +1,4 @@
 [project]
-# For more information on package metadata see:
-#
-#   * https://packaging.python.org/specifications/core-metadata/
-#
-# For even greater information on this file, see the pypa/sampleproject:
-#
-#   * https://github.com/pypa/sampleproject/blob/fc8d83efd5749853507be959d858629d0aaf5c6e/pyproject.toml
-#
 
 name = "archivesnz-rosetta-csv"
 dynamic = ["version"]
@@ -17,7 +9,8 @@ dependencies = [
 ]
 
 [project.scripts]
-archivesnz_rosetta_csv_generator = "anz_rosetta_csv.anz_rosetta_csv:main"
+anz_rosetta_csv = "anz_rosetta_csv.anz_rosetta_csv:main"
+anz-rosetta-csv = "anz_rosetta_csv.anz_rosetta_csv:main"
 
 [build-system]
 requires = ["setuptools>=70.0.0", "wheel", "setuptools_scm[toml]>=8.1.0"]

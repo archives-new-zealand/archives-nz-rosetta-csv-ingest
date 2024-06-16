@@ -31,7 +31,7 @@ def main():
     """Primary entry point for this script."""
 
     parser = argparse.ArgumentParser(
-        description="Generate Archway Import Sheet and Rosetta Ingest CSV from DROID CSV Reports."
+        description="Generate a Rosetta Ingest CSV from Collections List Control and DROID CSV Reports."
     )
     parser.add_argument(
         "--csv", help="Single DROID CSV to read.", default=False, required=False

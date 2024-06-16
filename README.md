@@ -42,10 +42,10 @@ The command line arguments look as follows:
 <!-- markdownlint-disable -->
 
 ```sh
-archivesnz_rosetta_csv_generator --help
-usage: archivesnz_rosetta_csv_generator [-h] [--csv CSV] [--exp EXP] [--ros ROS] [--cfg CFG] [--pro PRO] [--args ARGS]
+anz_rosetta_csv --help
+usage: anz_rosetta_csv [-h] [--csv CSV] [--exp EXP] [--ros ROS] [--cfg CFG] [--pro PRO] [--args ARGS]
 
-Generate Archway Import Sheet and Rosetta Ingest CSV from DROID CSV Reports.
+Generate Generate a Rosetta Ingest CSV from Collections List Control and DROID CSV Reports.
 
 options:
   -h, --help            show this help message and exit
