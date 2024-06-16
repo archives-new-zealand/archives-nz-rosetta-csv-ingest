@@ -102,7 +102,13 @@ This makes it easy to run the script using aliases in the virtual environment
 e.g. with:
 
 ```sh
-archivesnz_rosetta_csv_generator -h
+anz_rosetta_csv -h
+```
+
+or:
+
+```sh
+anz-rosetta-csv -h
 ```
 
 > NB. it is recommended to use a virtual environment locally, described below
