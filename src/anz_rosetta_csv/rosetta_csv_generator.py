@@ -37,7 +37,7 @@ except ModuleNotFoundError:
 logger = logging.getLogger(__name__)
 
 
-def ingest_path_from_droid_row(droid_row: dict, path_mask: str) -> bool:
+def ingest_path_from_droid_row(droid_row: dict, path_mask: str) -> str:
     """Return an ingest path from a droid row with pathmask removed."""
     file_name = droid_row["NAME"].strip()
     file_path = droid_row["FILE_PATH"].strip()
