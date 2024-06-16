@@ -228,7 +228,7 @@ schema: Final[
             "type": "http://www.w3.org/2001/XMLSchema#int",
             "constraints": {
                 "required": false,
-                "pattern": ""
+                "pattern": "ā, ē, ī, ō, ū, Ā, Ē, Ī, Ō Ū"
             }
         },
         {
@@ -566,7 +566,7 @@ Revision Number=1
 Usage Type=VIEW
 Digital Original=TRUE
 File Creation Date (General File Characteristics)=
-Preservation Type=PRESERVATION_MASTER
+Preservation Type=♙♘♗♖♕♔♚♛♜♝♞♟ā, ē, ī, ō, ū, Ā, Ē, Ī, Ō Ū ♭ ♮ ♯
 
 #Access maps to next section to enable multiple access mappings
 #Can also make static here...
@@ -605,7 +605,7 @@ dupe_list_control: Final[
 ] = """
 Item Code,State,Missing,Missing Comment,Transferring Agency,Series,Container,Box Number,Item Number,Record Number,Part Number,Sep Flag,Sep Number,Sub-Series,Title,Open Year,Close Year,Restriction Status,Restriction Expires,Restriction Expiry Year,Preservation,Alternative Record Number,Former Archives Reference,Record Type,Description,Public View,PV Expiry,PV Expiry Year,Item Level,Accession Number,Repository Reference,Final Series,Location
 R25437983,,,294c07b86ad9b460007d1655be2bbf38,AAAA,26000,,,,,,,,Project Programme,2006-07 Project Programme – MoU invitation to submit,2006,2006,O,,,Issuable,,,Not Determined,Last Accessed: 2017 * [Dates are generated from the file system and reflect file system parameters],Y,,,Item,ANZ2600,ANZ2600-1,26000-1,Digital Repository
-R25437984,,,294c07b86ad9b460007d1655be2bbf38,AAAA,26000,,,,,,,,Project Programme\\2006-07 Project Programme Submission to MoU,2006-07 Rules Bid_ Letter,2006,2006,O,,,Issuable,,,Not Determined,"Last Save Date: 2006, Last Accessed: 2017 * [Dates are generated from the file system and reflect file system parameters]",Y,,,Item,ANZ2600,ANZ2600-1,26000-1,Digital Repository
+R25437984,,,294c07b86ad9b460007d1655be2bbf38,AAAA,26000,,,,,,,,Project Programme\\2006-07 Project Programme Submission to MoU,2006-07 Rules Bid_ (🥬) Letter,2006,2006,O,,,Issuable,,,Not Determined,"Last Save Date: 2006, Last Accessed: 2017 * [Dates are generated from the file system and reflect file system parameters]",Y,,,Item,ANZ2600,ANZ2600-1,26000-1,Digital Repository
 """
 
 dupe_droid_csv: Final[
@@ -615,7 +615,7 @@ ID,PARENT_ID,URI,FILE_PATH,NAME,METHOD,STATUS,SIZE,TYPE,EXT,LAST_MODIFIED,EXTENS
 2,0,file:/R:/Digitised/Wellington/mock_transfer/2006-2007%20Project%20Programme/,R:\\Digitised\\Wellington\\mock_transfer\\2006-2007 Project Programme,2006-2007 Rules Programme,,Done,,Folder,,2017-06-27T13:49:34,false,,,,,,
 3,2,file:/R:/Digitised/Wellington/mock_transfer/2006-2007%20Project%20Programme/2006-07 Rule Programme – MoU invitation to submit.pdf,R:\\Digitised\\Wellington\\mock_transfer\\2006-2007 Project Programme\\2006-07 Project Programme – MoU invitation to submit.pdf ,2006-07 Project Programme – MoU invitation to submit.pdf,Signature,Done,228461,File,pdf,2006-02-13T10:45:40,false,294c07b86ad9b460007d1655be2bbf38,1,fmt/16,application/pdf,Acrobat PDF 1.2 - Portable Document Format,1.2
 4,2,file:/R:/Digitised/Wellington/mock_transfer/2006-2007%20Project%20Programme/2006-07%20Project%20Programme%20Submission%20to%20MoU/,R:\\Digitised\\Wellington\\mock_transfer\\2006-2007 Project Programme\\2006-07 Project Programme Submission to MoU,2006-07 Rules Programme Submission to MoT,,Done,,Folder,,2017-07-20T11:32:23,false,,,,,,
-5,4,file:/R:/Digitised/Wellington/mock_transfer/2006-2007%20Project%20Programme/2006-07%20Project%20Programme%20Submission%20to%20MoU/2006-07%20Rules%20Bid_%20Letter.doc,R:\\Digitised\\Wellington\\mock_transfer\\2006-2007 Project Programme\\2006-07 Project Programme Submission to MoU\\2006-07 Rules Bid_ Letter.doc ,2006-07 Rules Bid_ Letter.doc,Container,Done,29184,File,doc,2006-03-24T15:45:55,false,294c07b86ad9b460007d1655be2bbf38,1,fmt/40,application/msword,Microsoft Word Document,97-2003
+5,4,file:/R:/Digitised/Wellington/mock_transfer/2006-2007%20Project%20Programme/2006-07%20Project%20Programme%20Submission%20to%20MoU/2006-07%20Rules%20Bid_%20Letter.doc,R:\\Digitised\\Wellington\\mock_transfer\\2006-2007 Project Programme\\2006-07 Project Programme Submission to MoU\\2006-07 Rules Bid_ (🥬) Letter.doc ,2006-07 Rules Bid_ (🥬) Letter.doc,Container,Done,29184,File,doc,2006-03-24T15:45:55,false,294c07b86ad9b460007d1655be2bbf38,1,fmt/40,application/msword,Microsoft Word Document,97-2003
 """
 
 dupe_result: Final[
@@ -624,11 +624,11 @@ dupe_result: Final[
 "Object Type","Title (DC)","Title (DC)","Access Rights Policy ID (IE)","Archway Unique ID (Object Identifier)","Identifier - Archway Unique Id (DC)","Archway Series Number","Provenance (dcterms)","IE Entity Type","Submission Reason","Event Identifier Type","Event Identifier Value","Event Type","Event Description","Event Date","Event Outcome1","Event Outcome Detail1","Event Outcome Detail Extension1","Event Outcome2","Event Outcome Detail2","Event Outcome Detail Extension2","Event Outcome3","Event Outcome Detail3","Event Outcome Detail Extension3","Revision Number","Usage Type","Representation Code","Preservation Type","Digital Original","File Original Path","File Original Name","File Label","MD5","File Modification Date (General File Characteristics)","File Creation Date (General File Characteristics)"
 "SIP","Duplicates Ingest","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""
 "IE","","2006-07 Project Programme – MoU invitation to submit","1916130","R25437983","R25437983","26000-1","AAAA","ANZ_BornDigital","DigitalTransfer","","","","","","","","","","","","","","","","","","","","","","","","",""
-"REPRESENTATION","","","","","","","","","","","","","","","","","","","","","","","","1","VIEW","","PRESERVATION_MASTER","TRUE","","","","","",""
+"REPRESENTATION","","","","","","","","","","","","","","","","","","","","","","","","1","VIEW","","♙♘♗♖♕♔♚♛♜♝♞♟ā, ē, ī, ō, ū, Ā, Ē, Ī, Ō Ū ♭ ♮ ♯","TRUE","","","","","",""
 "FILE","","","","","","","","","","","","","","","","","","","","","","","","","","","","","2006-2007 Project Programme/","2006-07 Project Programme – MoU invitation to submit.pdf","","294c07b86ad9b460007d1655be2bbf38","2006-02-13T10:45:40",""
-"IE","","2006-07 Rules Bid_ Letter","1916130","R25437984","R25437984","26000-1","AAAA","ANZ_BornDigital","DigitalTransfer","","","","","","","","","","","","","","","","","","","","","","","","",""
-"REPRESENTATION","","","","","","","","","","","","","","","","","","","","","","","","1","VIEW","","PRESERVATION_MASTER","TRUE","","","","","",""
-"FILE","","","","","","","","","","","","","","","","","","","","","","","","","","","","","2006-2007 Project Programme/2006-07 Project Programme Submission to MoU/","2006-07 Rules Bid_ Letter.doc","","294c07b86ad9b460007d1655be2bbf38","2006-03-24T15:45:55",""
+"IE","","2006-07 Rules Bid_ (🥬) Letter","1916130","R25437984","R25437984","26000-1","AAAA","ANZ_BornDigital","DigitalTransfer","","","","","","","","","","","","","","","","","","","","","","","","",""
+"REPRESENTATION","","","","","","","","","","","","","","","","","","","","","","","","1","VIEW","","♙♘♗♖♕♔♚♛♜♝♞♟ā, ē, ī, ō, ū, Ā, Ē, Ī, Ō Ū ♭ ♮ ♯","TRUE","","","","","",""
+"FILE","","","","","","","","","","","","","","","","","","","","","","","","","","","","","2006-2007 Project Programme/2006-07 Project Programme Submission to MoU/","2006-07 Rules Bid_ (🥬) Letter.doc","","294c07b86ad9b460007d1655be2bbf38","2006-03-24T15:45:55",""
 """
 
 
@@ -642,10 +642,10 @@ def test_duplicates(tmp_path):
     droid_report = tmp_dir / "droid.csv"
     list_control_file = tmp_dir / "lc.csv"
 
-    config_file.write_text(dupe_config.strip().lstrip())
-    schema_file.write_text(schema.strip().lstrip())
-    droid_report.write_text(dupe_droid_csv.strip().lstrip())
-    list_control_file.write_text(dupe_list_control.strip().lstrip())
+    config_file.write_text(dupe_config.strip().lstrip(), encoding="utf-8")
+    schema_file.write_text(schema.strip().lstrip(), encoding="utf-8")
+    droid_report.write_text(dupe_droid_csv.strip().lstrip(), encoding="utf-8")
+    list_control_file.write_text(dupe_list_control.strip().lstrip(), encoding="utf-8")
 
     csvgen = RosettaCSVGenerator(
         droid_report,
