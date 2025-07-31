@@ -11,6 +11,9 @@ class ImportSheetGenerator:
         return title.rsplit(".", 1)[
             0
         ].rstrip()  # split once at full-stop (assumptuon 'ext' follows)
-        # for processing transfers where the record name provided is full file name WITH file extension: un-comment the line below (starts with "return") and comment-out 3 lines above (starting with "return")
+        
+        # for processing transfers where the record name provided is full file name WITH file extension: 
+        # 1) un-comment the line below (starts with "return title.rstrip()") and 
+        # 2) comment-out 3 lines above (starting with "return")
         # return title.rstrip()  # split once at full-stop (assumptuon 'ext' follows)
 
