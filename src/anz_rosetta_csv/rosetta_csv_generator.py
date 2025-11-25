@@ -131,7 +131,7 @@ class RosettaCSVGenerator:
 
         logging.info("reading app config from '%s'", configfile)
         self.config = ConfigParser.RawConfigParser()
-        self.config.read(configfile)
+        self.config.read(configfile, encoding="utf-8")
 
         self.droidcsv = droidcsv
         self.exportsheet = exportsheet

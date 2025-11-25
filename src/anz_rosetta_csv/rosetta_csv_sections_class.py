@@ -16,7 +16,7 @@ class RosettaCSVSections:
     def __init__(self, configfile):
         logging.info("reading app config from '%s'", configfile)
         self.config = ConfigParser.RawConfigParser()
-        self.config.read(configfile)
+        self.config.read(configfile, encoding="utf-8")
 
         # Configure via CFG to avoid users having to edit code
         sections = []
