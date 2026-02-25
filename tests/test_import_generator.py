@@ -519,11 +519,11 @@ def test_csv_generation(tmp_path):
     list_control_file = tmp_dir / "lc.csv"
     prov_file = tmp_dir / "prov.notes"
 
-    config_file.write_text(config.strip().lstrip())
-    schema_file.write_text(schema.strip().lstrip())
-    droid_report.write_text(droid_csv.strip().lstrip())
-    list_control_file.write_text(list_control.strip().lstrip())
-    prov_file.write_text(prov.strip().lstrip())
+    config_file.write_text(config.strip().lstrip(), encoding="utf-8")
+    schema_file.write_text(schema.strip().lstrip(), encoding="utf-8")
+    droid_report.write_text(droid_csv.strip().lstrip(), encoding="utf-8")
+    list_control_file.write_text(list_control.strip().lstrip(), encoding="utf-8")
+    prov_file.write_text(prov.strip().lstrip(), encoding="utf-8")
 
     csvgen = RosettaCSVGenerator(
         droid_report,

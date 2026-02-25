@@ -38,3 +38,4 @@ ignore-paths=
 disable =
     C0301,      # line too long.
     R0903,      # too few public methods.
+    R0801,      # similar lines across files.

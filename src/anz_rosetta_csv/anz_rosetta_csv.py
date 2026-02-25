@@ -1,5 +1,8 @@
 """Archives New Zealand Rosetta CSV Generator."""
 
+# pylint: disable=C0103; # upper-case naming conventions for constants.
+# pylint: disable=W0603; # global used for logger.
+
 import argparse
 import configparser as ConfigParser
 import logging
@@ -14,17 +17,23 @@ except ModuleNotFoundError:
     except ModuleNotFoundError:
         from anz_rosetta_csv.rosetta_csv_generator import RosettaCSVGenerator
 
+logger = None
 
-logger = logging.getLogger(__name__)
 
-logging.basicConfig(
-    format="%(asctime)-15s %(levelname)s :: %(filename)s:%(lineno)s:%(funcName)s() :: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level="INFO",
-)
-
-# Default to UTC time.
-logging.Formatter.converter = time.gmtime
+def init_logging(debug: bool):
+    """Initialize logging."""
+    logging.basicConfig(
+        format="%(asctime)-15s %(levelname)s :: %(filename)s:%(lineno)s:%(funcName)s() :: %(message)s",  # noqa: E501
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level=logging.DEBUG if debug else logging.INFO,
+        handlers=[
+            logging.StreamHandler(),
+        ],
+    )
+    logging.Formatter.converter = time.gmtime
+    global logger
+    logger = logging.getLogger(__name__)
+    logger.debug("debug logging is configured")
 
 
 def main():
@@ -62,12 +71,21 @@ def main():
         default=False,
         required=False,
     )
+    parser.add_argument(
+        "--debug",
+        help="Use DEBUG mode for more logging",
+        action="store_true",
+    )
 
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit()
 
     args = parser.parse_args()
+
+    # Initialize logging.
+    init_logging(args.debug)
+
     if args.args:
         config = ConfigParser.RawConfigParser()
         config.read(args.args)

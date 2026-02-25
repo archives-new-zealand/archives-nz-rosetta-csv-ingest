@@ -1,6 +1,9 @@
 """Archives New Zealand Rosetta CSV Generator."""
 
-# pylint: disable=R1710,R0902,R0913,R0912
+# pylint: disable=R0902; # too-many instance attributes.
+# pylint: disable=R0913; # too-many arguments.
+# pylint: disable=R1710; # all-return statements must return.
+# pylint: disable=R0912; # too-many branches.
 
 import configparser as ConfigParser
 import logging
@@ -49,12 +52,50 @@ def ingest_path_from_droid_row(droid_row: dict, path_mask: str) -> str:
 def find_path_from_subseries(
     record_title: str, droid_row: dict, lc_sub_series: str, series_mask: str
 ) -> bool:
-    """Determine the path to add to the CSV from its sub-series"""
+    """Determine the path to add to the CSV from its sub-series.
+
+    Example:
+
+        pathmask is: "R:\\Digitised\\Wellington\\mock_transfer\\" (we zip the contents from what is remaining)
+
+        droid path: "R:\\Digitised\\Wellington\\mock_transfer\\2006-2007 Project Programme\\2006-07 Project Programme Submission to MoU\\2006-07 Rules Bid_ (🥬) Letter.doc"
+
+        desired subseries: "Project Programme\\"
+
+        given the desired subseries we need to strip the following from the DROID path: "R:\\Digitised\\Wellington\\mock_transfer\\2006-2007 "
+
+        the droid path now looks like: "Project Programme\\2006-07 Project Programme Submission to MoU\\2006-07 Rules Bid_ (🥬) Letter.doc"
+
+        the file name is removed (this sounds counter-intuitive but it can only be removed IF it matches) leaving: "Project Programme\\2006-07 Project Programme Submission to MoU\\"
+
+        which is compared to the list control: "Project Programme\\2006-07 Project Programme Submission to MoU"
+
+        we now do the comparison: "Project Programme\\2006-07 Project Programme Submission to MoU\\" (calculated from the DROID sheet) is equal to "Project Programme\\2006-07 Project Programme Submission to MoU" (in the list control)
+
+    """
+
     file_name = droid_row["NAME"].strip()
     file_path = droid_row["FILE_PATH"].strip()
+
+    logger.debug("DROID row filename: '%s'", file_path)
+    logger.debug("DROID row path: '%s'", file_path)
+
     if record_title.strip() not in file_path:
+        logger.error("record title '%s' not in DROID filename", record_title)
         return False
+
+    logger.debug("list control sub-series mask: '%s'", series_mask)
+    logger.debug("record title: '%s'", record_title)
+
     compare = file_path.replace(file_name, "").replace(series_mask, "", 1).strip()[:-1]
+
+    logger.debug(
+        "string to compare with sub-series: '%s' and sub_series: '%s' matches: '%s'",
+        compare,
+        lc_sub_series,
+        (compare == lc_sub_series),
+    )
+
     return compare == lc_sub_series
 
 
@@ -90,7 +131,7 @@ class RosettaCSVGenerator:
 
         logging.info("reading app config from '%s'", configfile)
         self.config = ConfigParser.RawConfigParser()
-        self.config.read(configfile)
+        self.config.read(configfile, encoding="utf-8")
 
         self.droidcsv = droidcsv
         self.exportsheet = exportsheet
